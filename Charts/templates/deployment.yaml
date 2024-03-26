@@ -1,0 +1,49 @@
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-wiki
+  namespace: {{ .Values.namespace.name }}
+spec:
+  selector:
+    matchLabels:
+      app: media-wiki
+  template:
+    metadata:
+      labels:
+        app: media-wiki
+    spec:
+      containers:
+      - name: media-wiki
+        image: "{{ .Values.mediaWiki.image }}:{{ .Values.mediaWiki.tag }}"
+        resources: {{ toYaml .Values.mediaWiki.resources | nindent 12 }}
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-wiki-db
+  namespace: {{ .Values.namespace.name }}
+spec:
+  selector:
+    matchLabels:
+      app: media-wiki-db
+  template:
+    metadata:
+      labels:
+        app: media-wiki-db
+    spec:
+      containers:
+      - name: media-wiki-db
+        image: "{{ .Values.mediaWikiDB.image }}:{{ .Values.mediaWikiDB.tag }}"
+        resources: {{ toYaml .Values.mediaWikiDB.resources | nindent 12 }}
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: hostpath-volume
+          mountPath: "/var/lib/mysql"
+      volumes:
+      - name: hostpath-volume
+        hostPath:
+          path: /path/on/host

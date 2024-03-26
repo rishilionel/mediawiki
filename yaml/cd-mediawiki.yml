@@ -1,0 +1,38 @@
+trigger: none
+resources:
+  pipelines:
+    - pipeline: ci-mediawiki
+      source: Build
+      trigger:
+        branches:
+          include:
+            - main
+
+variables:
+  chartPath: 'Charts'
+
+stages:
+- stage: Deployment
+  displayName: Doing-Deployment
+  jobs:
+    - deployment : Production
+      pool: 
+        vmImage: 'windows-latest'
+      environment: 'DeploymentApproval'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - checkout: self
+            - task: HelmDeploy@0
+              inputs:
+                connectionType: 'Azure Resource Manager'
+                azureSubscription: 'MySubscription'
+                azureResourceGroup: 'rg-mediawiki'
+                kubernetesCluster: 'aks_media_wiki'
+                command: 'upgrade'
+                chartType: 'FilePath'
+                chartPath: '$(chartPath)'
+                releaseName: 'media-wiki'
+                valueFile: '$(chartPath)/values.yaml'
+                overrideValues: 'mediaWiki.tag=build-$(resources.pipeline.ci-mediawiki.runID),mediaWikiDB.tag=build-$(resources.pipeline.ci-mediawiki.runID)'

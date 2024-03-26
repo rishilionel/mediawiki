@@ -1,0 +1,16 @@
+namespace:
+  name: media-wiki-ns
+mediaWiki:
+  image: rishinarayan/mediawiki-app
+  tag: build-$(Build.BuildId)
+  resources:
+    limits:
+      memory: "128Mi"
+      cpu: "500m"
+mediaWikiDB:
+  image: rishinarayan/mediawiki-db
+  tag: build-$(Build.BuildId)
+  resources:
+    limits:
+      memory: "512Mi"
+      cpu: "500m"

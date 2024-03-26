@@ -1,0 +1,46 @@
+name: ci-mediawiki
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - 'mediawiki/*'
+      - 'Dockerfile.DB'
+
+variables:
+  imageTag: 'build-$(Build.BuildId)'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: Docker@2
+  inputs:
+    containerRegistry: 'DockerHub'
+    repository: rishinarayan/mediawiki-app
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile.Application'
+    tags: '$(imageTag)'
+- task: Docker@2
+  inputs:
+    containerRegistry: 'DockerHub'
+    repository: rishinarayan/mediawiki-db
+    command: 'buildAndPush'
+    Dockerfile: 'Dockerfile.DB'
+    tags: '$(imageTag)'
+- task: HelmInstaller@0
+  inputs:
+    helmVersion: '2.14.1'
+    installKubectl: true
+- script: |
+    ls
+    cd Charts/
+    ls
+    helm package --version $(Build.BuildId) . 
+  displayName: 'Package Helm chart'
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: 'Charts/media-wiki-chart-$(Build.BuildId).tgz'
+    artifact: 'helm-package'
+    publishLocation: 'pipeline'
