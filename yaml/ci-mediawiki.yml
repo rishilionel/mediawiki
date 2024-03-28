@@ -9,7 +9,9 @@ trigger:
       - 'Dockerfile.DB'
 
 variables:
-  imageTag: 'build-$(Build.BuildId)'
+  - group: my-variable-group
+  - name: imageTag
+    value: 'build-$(Build.BuildId)'
 
 pool:
   vmImage: ubuntu-latest
@@ -22,12 +24,26 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile.Application'
     tags: '$(imageTag)'
+# - task: Docker@2
+#   inputs:
+#     containerRegistry: 'DockerHub'
+#     repository: rishinarayan/mediawiki-db
+#     command: 'buildAndPush'
+#     Dockerfile: 'Dockerfile.DB'
+#     tags: '$(imageTag)'
 - task: Docker@2
   inputs:
     containerRegistry: 'DockerHub'
-    repository: rishinarayan/mediawiki-db
-    command: 'buildAndPush'
+    repository: 'rishinarayan/mediawiki-db'
+    command: 'build'
     Dockerfile: 'Dockerfile.DB'
+    arguments: '--build-arg db_password=$(DB_PASSWORD) --quiet'
+    tags: '$(imageTag)'
+- task: Docker@2
+  inputs:
+    containerRegistry: 'DockerHub'
+    repository: 'rishinarayan/mediawiki-db'
+    command: 'push'
     tags: '$(imageTag)'
 - task: HelmInstaller@0
   inputs:

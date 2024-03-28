@@ -48,6 +48,7 @@
 
 # Local .terraform directories
 **/.terraform/*
+./terraform/myplan
 
 # .tfstate files
 *.tfstate
